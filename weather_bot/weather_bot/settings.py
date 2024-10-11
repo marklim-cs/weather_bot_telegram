@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
 from pathlib import Path
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -20,7 +21,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-#tj*s+g_+7gal(0*75%jokea($^lmy@@k#!l=*sl7500r)@%a&'
+SECRET_KEY = os.getenv("SECRET_KEY")
+
+API_KEY = os.getenv("API_KEY")
+
+CURRENT_WEATHER_URL = "https://api.openweathermap.org/data/2.5/weather?lat={}&lon={}&appid={}"
+FORECAST_WEATHER_URL = "http://api.openweathermap.org/data/2.5/forecast?lat={}&lon={}&appid={}"
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
