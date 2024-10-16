@@ -22,9 +22,9 @@ load_dotenv()
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.getenv('DJ_SECRET_KEY')
-API_KEY = os.getenv('API_KEY')
+API_KEY = os.getenv('WEATHER_API_KEY')
+TELEGRAM_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
 
 CURRENT_WEATHER_URL = "https://api.openweathermap.org/data/2.5/weather?lat={}&lon={}&appid={}"
 FORECAST_WEATHER_URL = "http://api.openweathermap.org/data/2.5/forecast?lat={}&lon={}&appid={}"
@@ -34,9 +34,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
-
 # Application definition
-
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',

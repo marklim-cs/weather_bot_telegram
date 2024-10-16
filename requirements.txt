@@ -3,4 +3,4 @@ Django==5.1.1
 sqlparse==0.5.1
 psycopg2==2.9.9
 python-dotenv==1.0.1
-django-environ==0.11.2
+python-telegram-bot==21.6
