@@ -7,4 +7,4 @@ class User(models.Model):
     lon = models.FloatField(null=True, blank=True)
 
     def __str__(self):
-        return f"{name}"
+        return f"{User.name}"
