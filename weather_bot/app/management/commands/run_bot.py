@@ -4,11 +4,11 @@ import logging
 import django
 from dotenv import load_dotenv
 from django.core.management.base import BaseCommand
-from telegram.ext import (
-    ApplicationBuilder,
-    CommandHandler
-)
-from app.handlers import start
+from telegram.ext import (ApplicationBuilder, CommandHandler, MessageHandler, filters)
+
+from app.handlers import start, set_location, location_handler
+
+
 
 class Command(BaseCommand):
     help = "Runs the Telegram bot"
@@ -23,7 +23,14 @@ class Command(BaseCommand):
             level=logging.INFO
         )
 
-        application = ApplicationBuilder().token(os.getenv("TELEGRAM_BOT_TOKEN")).build()
-        application.add_handler(CommandHandler("start", start))
+        asyncio.run(self.run_bot())
 
-        asyncio.run(application.run_polling())
+    def run_bot(self):
+
+        application = ApplicationBuilder().token(os.getenv("TELEGRAM_BOT_TOKEN")).build()
+
+        application.add_handler(CommandHandler("start", start))
+        application.add_handler(CommandHandler("setlocation", set_location))
+        application.add_handler(MessageHandler(filters.LOCATION, location_handler))
+
+        application.run_polling()

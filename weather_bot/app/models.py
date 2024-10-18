@@ -6,5 +6,7 @@ class User(models.Model):
     lat = models.FloatField(null=True, blank=True)
     lon = models.FloatField(null=True, blank=True)
 
+    objects = models.Manager()
+
     def __str__(self):
-        return f"{User.name}"
+        return f"{self.name}"
