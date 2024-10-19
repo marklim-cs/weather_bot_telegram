@@ -33,5 +33,6 @@ class Command(BaseCommand):
         application.add_handler(CommandHandler("setlocation", set_location))
         application.add_handler(MessageHandler(filters.LOCATION, location_handler))
         application.add_handler(CommandHandler("current_weather", current_weather))
+        application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, current_weather))
 
         application.run_polling()
