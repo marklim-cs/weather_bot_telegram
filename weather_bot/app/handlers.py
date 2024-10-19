@@ -66,20 +66,31 @@ async def current_weather(update: Update, context: ContextTypes.DEFAULT_TYPE):
         current_weather_url = "https://api.openweathermap.org/data/2.5/weather?lat={}&lon={}&appid={}&units=metric"
         weather = _fetch_current_weather(user.lat, user.lon, api_key, current_weather_url)
 
+        weather_message = (
+            "Current weather\n"
+            "\n"
+            f"Temperature: {weather['temperature']}\n"
+            f"Feels like: {weather['feels like']}\n"
+            f"Description: {weather['description']}\n"
+            "\n"
+            f"Wind: {weather['wind']}\n"
+            f"Rain: {weather['rain']}\n"
+        )
+
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
-            text = f"{weather}"
+            text = f"{weather_message}"
         )
 
 def _fetch_current_weather(lat, lon, api_key, current_weather_url):
     response = requests.get(current_weather_url.format(lat, lon, api_key)).json()
 
-    #weather_current = {
-        #"temperature": round(response['main']['temp']),
-        #"feels like": response['main']['feels_like'],
-        #"description": response['weather'][0]['description'],
-        #"wind": response['wind']['speed'],
-        #"rain": response['rain']['1h'],
-    #}
+    weather_current = {
+        "temperature": f"{round(response['main']['temp'])}°C",
+        "feels like": f"{response['main']['feels_like']}°C",
+        "description": response['weather'][0]['description'],
+        "wind": f"{response['wind']['speed']} meter/sec",
+        "rain": f"{response.get('rain', {}).get('1h', 0)} mm/h"
+    }
 
-    return response
+    return weather_current
