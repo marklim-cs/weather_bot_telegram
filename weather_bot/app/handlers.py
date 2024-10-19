@@ -16,12 +16,16 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
-        text="Welcome! I'll send you daily weather updates. Please set your location using /setlocation.")
+        text='''Welcome! I'll send you daily weather updates ⛅
+                \nPlease set your location using /setlocation.'''
+                )
 
 async def set_location(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
                 [KeyboardButton('Share location', request_location=True)],
-                [KeyboardButton('Get current weather')]
+                [KeyboardButton('Get current weather')],
+                [KeyboardButton('Weather Tomorrow')],
+                [KeyboardButton('3 days forecast')],
                 ]
     reply_markup = ReplyKeyboardMarkup(keyboard, one_time_keyboard=False, resize_keyboard=True)
 
