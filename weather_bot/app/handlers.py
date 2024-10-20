@@ -14,26 +14,20 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         telegram_id=telegram_user.id,
         defaults = {'name': telegram_user.full_name}
     )
-    await context.bot.send_message(
-        chat_id=update.effective_chat.id,
-        text='''Welcome! I'll send you daily weather updates ⛅
-                \nPlease set your location using /setlocation.'''
-                )
 
-async def set_location(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
                 [KeyboardButton('Share location', request_location=True)],
                 [KeyboardButton('Get current weather')],
-                [KeyboardButton('Weather Tomorrow')],
-                [KeyboardButton('3 days forecast')],
                 ]
     reply_markup = ReplyKeyboardMarkup(keyboard, one_time_keyboard=False, resize_keyboard=True)
 
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
-        text="Please share your location by clicking the button below to receive accurate weather updates.",
+        text='''Welcome! I'll send you daily weather updates ⛅
+                \nSet your location clicking the 'Share location' button below ⬇️ to receive accurate weather updates.
+                ''',
         reply_markup = reply_markup,
-    )
+                )
 
 async def location_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     telegram_user = update.effective_user
