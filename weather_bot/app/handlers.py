@@ -1,4 +1,6 @@
 import os
+import datetime
+from collections import defaultdict
 import requests
 from telegram import Update, ReplyKeyboardMarkup, KeyboardButton
 from telegram.ext import ContextTypes
@@ -6,6 +8,9 @@ from asgiref.sync import sync_to_async
 from dotenv import load_dotenv
 
 from .models import User
+
+load_dotenv()
+API_KEY = os.getenv("WEATHER_API_KEY")
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     telegram_user = update.effective_user
@@ -18,6 +23,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
                 [KeyboardButton('Share location', request_location=True)],
                 [KeyboardButton('Get current weather')],
+                [KeyboardButton('4 days forecast')],
                 ]
     reply_markup = ReplyKeyboardMarkup(keyboard, one_time_keyboard=False, resize_keyboard=True)
 
@@ -53,7 +59,7 @@ async def location_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
-            text = "You didn't provide the location 😢 click /setlocation to try again."
+            text = "You didn't provide the location 😢 click 'Share location' button to try again."
         )
 
 async def current_weather(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -65,9 +71,8 @@ async def current_weather(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         load_dotenv()
         if user.lat and user.lon:
-            api_key = os.getenv("WEATHER_API_KEY")
             current_weather_url = "https://api.openweathermap.org/data/2.5/weather?lat={}&lon={}&appid={}&units=metric"
-            weather = _fetch_current_weather(user.lat, user.lon, api_key, current_weather_url)
+            weather = _fetch_current_weather(user.lat, user.lon, API_KEY, current_weather_url)
 
             weather_message = (
                 "Current weather ☔ \n"
@@ -85,8 +90,25 @@ async def current_weather(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 text=f"{weather_message}",
             )
 
+async def feather_forecast(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    telegram_user = update.effective_user
+    message_text = update.message.text
+
+    if message_text == "4 days forecast":
+        user, created = await sync_to_async(User.objects.get_or_create)(telegram_id = telegram_user.id)
+
+        if user.lat and user.lon:
+            forecast_weather_url = "http://api.openweathermap.org/data/2.5/forecast?lat={}&lon={}&appid={}"
+            weather = _fetch_weather_forecast(user.lat, user.lon, API_KEY, forecast_weather_url)
+
+
+
 def _fetch_current_weather(lat, lon, api_key, current_weather_url):
-    response = requests.get(current_weather_url.format(lat, lon, api_key)).json()
+    try:
+        response = requests.get(current_weather_url.format(lat, lon, api_key),
+                            timeout=10).json()
+    except requests.exceptions.Timeout:
+        return "The request timed out. Please try again later."
 
     weather_current = {
         "temperature": f"{round(response['main']['temp'])}°C",
@@ -97,3 +119,49 @@ def _fetch_current_weather(lat, lon, api_key, current_weather_url):
     }
 
     return weather_current
+
+def _fetch_weather_forecast(lat, lon, api_key, forecast_weather_url):
+    try:
+        response = requests.get(forecast_weather_url.format(lat, lon, api_key),
+                            timeout=10).json()
+    except requests.exceptions.Timeout:
+        return "The request timed out. Please try again later."
+
+    daily_forecast = []
+    daily_data_grouped = defaultdict(list)
+
+    #group the data by day
+    for daily_data in response['list'][0:40]:
+        day = datetime.datetime.fromtimestamp(daily_data['dt']).strftime("%A")
+        daily_data_grouped[day].append(daily_data)
+
+    #exctract min and max temp
+    for day, data_list in list(daily_data_grouped.items())[1:5]:
+        min_temp = round(min(data['main']['temp'] for data in data_list))
+        max_temp = round(max(data['main']['temp'] for data in data_list))
+
+        descriptions = (data['weather'][0]['description'] for data in data_list)
+        most_frequent_description = count_element_frequency(descriptions)
+
+        icons = (data['weather'][0]['icon'] for data in data_list)
+        most_frequent_icon = count_element_frequency(icons)
+
+        daily_forecast.append({
+            "day": day, 
+            "min_temp": min_temp, 
+            "max_temp": max_temp,
+            "description": most_frequent_description,
+            "icon": most_frequent_icon,
+        })
+
+def count_element_frequency(array):
+    frequency_dict = {}
+
+    for element in array:
+        if element in frequency_dict:
+            frequency_dict[element] += 1
+        else:
+            frequency_dict[element] = 1
+
+    max_key = max(frequency_dict, key=frequency_dict.get)
+    return max_key

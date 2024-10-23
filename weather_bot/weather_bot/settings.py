@@ -26,9 +26,6 @@ SECRET_KEY = os.getenv('DJ_SECRET_KEY')
 API_KEY = os.getenv('WEATHER_API_KEY')
 TELEGRAM_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
 
-CURRENT_WEATHER_URL = "https://api.openweathermap.org/data/2.5/weather?lat={}&lon={}&appid={}"
-FORECAST_WEATHER_URL = "http://api.openweathermap.org/data/2.5/forecast?lat={}&lon={}&appid={}"
-
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
@@ -53,6 +50,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'app.middlewares.JWTAuthenticationMiddleware',
 ]
 
 ROOT_URLCONF = 'weather_bot.urls'
