@@ -21,9 +21,9 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
     keyboard = [
-                [KeyboardButton('Share location', request_location=True)],
-                [KeyboardButton('Get current weather')],
-                [KeyboardButton('4 days forecast')],
+                [KeyboardButton("Share location", request_location=True)],
+                [KeyboardButton("Get current weather")],
+                [KeyboardButton("Today's weather")],
                 ]
     reply_markup = ReplyKeyboardMarkup(keyboard, one_time_keyboard=False, resize_keyboard=True)
 
@@ -78,7 +78,7 @@ async def current_weather(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 "Current weather ☔ \n"
                 "\n"
                 f"🌡️ Temperature: {weather['temperature']}\n"
-                f"🤔 Feels like: {weather['feels like']}\n"
+                f"🤔 Feels like: {weather['feels_like']}\n"
                 f"🌦️ Description: {weather['description']}\n"
                 "\n"
                 f"💨 Wind: {weather['wind']}\n"
@@ -90,18 +90,29 @@ async def current_weather(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 text=f"{weather_message}",
             )
 
-async def feather_forecast(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def todays_weather(update: Update, context: ContextTypes.DEFAULT_TYPE):
     telegram_user = update.effective_user
     message_text = update.message.text
 
-    if message_text == "4 days forecast":
+    if message_text == "Today's weather":
         user, created = await sync_to_async(User.objects.get_or_create)(telegram_id = telegram_user.id)
 
         if user.lat and user.lon:
             forecast_weather_url = "http://api.openweathermap.org/data/2.5/forecast?lat={}&lon={}&appid={}"
-            weather = _fetch_weather_forecast(user.lat, user.lon, API_KEY, forecast_weather_url)
+            weather_f = _fetch_weather_forecast(user.lat, user.lon, API_KEY, forecast_weather_url)
 
+            weather_message = (
+                "Today's weather ☔ \n"
+                    "\n"
+                    f"🌡️ Min. temperature: {weather_f['min_temp']}\n"
+                    f"🌡️ Max. temperature: {weather_f['max_temp']}\n"
+                    f"🌦️ Description: {weather_f['description']}\n"
+            )
 
+            await context.bot.send_message(
+                    chat_id=update.effective_chat.id,
+                    text=f"{weather_message}",
+                )
 
 def _fetch_current_weather(lat, lon, api_key, current_weather_url):
     try:
@@ -112,7 +123,7 @@ def _fetch_current_weather(lat, lon, api_key, current_weather_url):
 
     weather_current = {
         "temperature": f"{round(response['main']['temp'])}°C",
-        "feels like": f"{round(response['main']['feels_like'])}°C",
+        "feels_like": f"{round(response['main']['feels_like'])}°C",
         "description": response['weather'][0]['description'],
         "wind": f"{response['wind']['speed']} meter/sec",
         "rain": f"{response.get('rain', {}).get('1h', 0)} mm/h",
@@ -136,7 +147,7 @@ def _fetch_weather_forecast(lat, lon, api_key, forecast_weather_url):
         daily_data_grouped[day].append(daily_data)
 
     #exctract min and max temp
-    for day, data_list in list(daily_data_grouped.items())[1:5]:
+    for day, data_list in list(daily_data_grouped.items())[0:1]:
         min_temp = round(min(data['main']['temp'] for data in data_list))
         max_temp = round(max(data['main']['temp'] for data in data_list))
 
@@ -153,6 +164,8 @@ def _fetch_weather_forecast(lat, lon, api_key, forecast_weather_url):
             "description": most_frequent_description,
             "icon": most_frequent_icon,
         })
+
+        return daily_forecast
 
 def count_element_frequency(array):
     frequency_dict = {}
